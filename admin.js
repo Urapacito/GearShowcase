@@ -45,11 +45,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginOverlay = document.getElementById("login-overlay");
   const adminApp = document.getElementById("admin-app");
   const loginForm = document.getElementById("login-form");
+  const btnLogout = document.getElementById("btn-logout");
 
-  if (sessionStorage.getItem('uraniii_admin_auth') === 'true') {
+  function checkAuth() {
+    try {
+      const authData = JSON.parse(localStorage.getItem('uraniii_admin_auth'));
+      if (authData && authData.expires > Date.now()) {
+        return true;
+      }
+    } catch(e) {}
+    return false;
+  }
+
+  if (checkAuth()) {
     loginOverlay.style.display = 'none';
     adminApp.style.display = 'block';
     loadData();
+    loadSettings();
   }
 
   loginForm.onsubmit = async (e) => {
@@ -58,14 +70,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const pass = document.getElementById("login-password").value;
 
     try {
-      const response = await fetch('./account.json');
+      const response = await fetch('./database/account.json');
       const account = await response.json();
       
       if (user === account.username && pass === account.password) {
-        sessionStorage.setItem('uraniii_admin_auth', 'true');
+        const expires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+        localStorage.setItem('uraniii_admin_auth', JSON.stringify({ expires }));
         loginOverlay.style.display = 'none';
         adminApp.style.display = 'block';
         loadData();
+        loadSettings();
         showToast("Logged in successfully!");
       } else {
         showToast("Invalid username or password.");
@@ -76,21 +90,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  async function loadData() {
-    // Try localStorage first
-    const localData = localStorage.getItem('aura_products');
-    if (localData) {
-      products = JSON.parse(localData);
-      renderList();
-      return;
-    }
+  if (btnLogout) {
+    btnLogout.onclick = () => {
+      localStorage.removeItem('uraniii_admin_auth');
+      window.location.reload();
+    };
+  }
 
-    // Fallback to fetch from JSON
+  async function loadData() {
     try {
-      const response = await fetch('./products.json');
+      let response = await fetch('/api/products');
+      if (!response.ok) {
+        response = await fetch('./database/products.json');
+      }
       if (response.ok) {
         products = await response.json();
-        saveData();
         renderList();
       }
     } catch (e) {
@@ -99,15 +113,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function saveData() {
-    localStorage.setItem('aura_products', JSON.stringify(products));
     try {
-      await fetch('/api/save', {
+      await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(products, null, 2)
       });
     } catch(err) {
-      console.warn("Could not save to file system automatically.", err);
+      console.warn("Could not save to cloud automatically.", err);
     }
   }
 
@@ -151,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('prod-name').value = product.name;
     document.getElementById('prod-category').value = product.category;
     document.getElementById('prod-price').value = product.price;
-    document.getElementById('prod-desc').value = product.description;
+    descEditor.root.innerHTML = product.description || '';
     
     currentImages = product.images || (product.imageUrl ? [product.imageUrl] : []);
     renderImages();
@@ -206,6 +219,81 @@ document.addEventListener("DOMContentLoaded", () => {
     currentEditingId = null;
     currentImages = [];
     renderList();
+  };
+
+  // Quill Editors & Tabs
+  const descEditor = new Quill('#prod-desc-editor', {
+    theme: 'snow',
+    placeholder: 'Enter product description...'
+  });
+  const bioEditor = new Quill('#bio-editor', {
+    theme: 'snow',
+    placeholder: 'Write your bio here...'
+  });
+
+  const tabs = document.querySelectorAll('.btn-tab');
+  const tabContents = document.querySelectorAll('.tab-content');
+  tabs.forEach(tab => {
+    tab.onclick = () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tabContents.forEach(c => c.style.display = 'none');
+      tab.classList.add('active');
+      const targetId = tab.getAttribute('data-target');
+      document.getElementById(targetId).style.display = targetId === 'tab-products' ? 'grid' : 'block';
+    };
+  });
+
+  // Settings Logic (Bio & Socials)
+  let siteSettings = { bio: '', socials: {} };
+
+  async function loadSettings() {
+    try {
+      let response = await fetch('/api/settings');
+      if (!response.ok) response = await fetch('./database/settings.json');
+      if (response.ok) {
+        siteSettings = await response.json();
+        bioEditor.root.innerHTML = siteSettings.bio || '';
+        if (siteSettings.socials) {
+          document.getElementById('social-discord').value = siteSettings.socials.discord || '';
+          document.getElementById('social-facebook').value = siteSettings.socials.facebook || '';
+          document.getElementById('social-youtube').value = siteSettings.socials.youtube || '';
+          document.getElementById('social-instagram').value = siteSettings.socials.instagram || '';
+          document.getElementById('social-email').value = siteSettings.socials.email || '';
+        }
+      }
+    } catch(e) {
+      console.warn("Could not load settings", e);
+    }
+  }
+
+  async function saveSettings() {
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(siteSettings, null, 2)
+      });
+      showToast("Settings saved successfully!");
+    } catch(err) {
+      showToast("Error saving settings.");
+      console.error(err);
+    }
+  }
+
+  document.getElementById('btn-save-bio').onclick = () => {
+    siteSettings.bio = bioEditor.root.innerHTML;
+    saveSettings();
+  };
+
+  document.getElementById('btn-save-socials').onclick = () => {
+    siteSettings.socials = {
+      discord: document.getElementById('social-discord').value.trim(),
+      facebook: document.getElementById('social-facebook').value.trim(),
+      youtube: document.getElementById('social-youtube').value.trim(),
+      instagram: document.getElementById('social-instagram').value.trim(),
+      email: document.getElementById('social-email').value.trim()
+    };
+    saveSettings();
   };
 
   // Image Handling
@@ -270,7 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
       name: name,
       category: document.getElementById('prod-category').value.trim(),
       price: parseFloat(document.getElementById('prod-price').value),
-      description: document.getElementById('prod-desc').value.trim(),
+      description: descEditor.root.innerHTML,
       images: currentImages,
       modelUrl: document.getElementById('prod-model').value.trim(),
       specs: specs

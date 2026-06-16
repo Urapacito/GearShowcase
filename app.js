@@ -7,16 +7,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Fetch product data
   async function fetchProducts() {
     try {
-      const localData = localStorage.getItem('aura_products');
-      if (localData) {
-        const products = JSON.parse(localData);
-        renderProducts(products);
-        initAnimations();
-        initCarousels();
-        return;
+      let response = await fetch('/api/products');
+      if (!response.ok) {
+        response = await fetch('./database/products.json');
       }
-
-      const response = await fetch('./products.json');
       if (!response.ok) throw new Error("Network response was not ok");
       const products = await response.json();
       renderProducts(products);
@@ -146,5 +140,50 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  async function fetchSettings() {
+    try {
+      let response = await fetch('/api/settings');
+      if (!response.ok) response = await fetch('./database/settings.json');
+      if (!response.ok) return;
+      
+      const settings = await response.json();
+      
+      const bioEl = document.getElementById("bio-container");
+      if (bioEl && settings.bio) {
+        bioEl.innerHTML = `<h2 class="section-title">About Me</h2><div style="text-align: left; display: inline-block;">${settings.bio}</div>`;
+      } else if (bioEl) {
+        document.getElementById("aboutme").style.display = 'none';
+      }
+
+      const socialsEl = document.getElementById("socials-container");
+      if (socialsEl && settings.socials) {
+        let socialsHtml = '';
+        const s = settings.socials;
+        
+        const cardStyle = `display: flex; align-items: center; background: #1a1a1c; border-radius: 12px; padding: 12px 20px 12px 12px; text-decoration: none; color: #fff; font-weight: 600; width: 260px; font-size: 0.95rem; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.2s, background 0.2s;`;
+        const hoverCss = `this.style.background='#222225';this.style.transform='translateY(-2px)'`;
+        const outCss = `this.style.background='#1a1a1c';this.style.transform='translateY(0)'`;
+        
+        const getIcon = (bg, icon) => `<div style="background: ${bg}; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 16px; font-size: 1.5rem;"><i class="${icon}"></i></div>`;
+        const getArrow = () => `<i class="ph ph-arrow-up-right" style="margin-left: auto; color: #666; font-size: 1.1rem;"></i>`;
+
+        if (s.discord) socialsHtml += `<a href="${s.discord}" target="_blank" style="${cardStyle}" onmouseover="${hoverCss}" onmouseout="${outCss}">${getIcon('#5865F2', 'ph-fill ph-discord-logo')} DISCORD ${getArrow()}</a>`;
+        if (s.facebook) socialsHtml += `<a href="${s.facebook}" target="_blank" style="${cardStyle}" onmouseover="${hoverCss}" onmouseout="${outCss}">${getIcon('#1877F2', 'ph-fill ph-facebook-logo')} FACEBOOK ${getArrow()}</a>`;
+        if (s.youtube) socialsHtml += `<a href="${s.youtube}" target="_blank" style="${cardStyle}" onmouseover="${hoverCss}" onmouseout="${outCss}">${getIcon('#FF0000', 'ph-fill ph-youtube-logo')} YOUTUBE ${getArrow()}</a>`;
+        if (s.instagram) socialsHtml += `<a href="${s.instagram}" target="_blank" style="${cardStyle}" onmouseover="${hoverCss}" onmouseout="${outCss}">${getIcon('#E1306C', 'ph-fill ph-instagram-logo')} INSTAGRAM ${getArrow()}</a>`;
+        if (s.email) socialsHtml += `<a href="mailto:${s.email}" style="${cardStyle}" onmouseover="${hoverCss}" onmouseout="${outCss}">${getIcon('#EA4335', 'ph-fill ph-envelope')} EMAIL ${getArrow()}</a>`;
+        
+        if (socialsHtml) {
+          socialsEl.innerHTML = socialsHtml;
+        } else {
+          document.getElementById("contact").style.display = 'none';
+        }
+      }
+    } catch(e) {
+      console.warn("Could not load settings");
+    }
+  }
+
   fetchProducts();
+  fetchSettings();
 });

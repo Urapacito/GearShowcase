@@ -31,9 +31,10 @@
         <i class="ph ph-waves"></i> URANIII
       </a>
       <nav class="nav-links">
+        <a href="#aboutme">About Me</a>
         <a href="#showcase">Showcase</a>
-        <a href="#about">Philosophy</a>
-        <a href="#support">Support</a>
+        <a href="#philosophy">Philosophy</a>
+        <a href="#contact">Contact Me</a>
       </nav>
       <a href="./admin.html" class="btn-admin">
         <i class="ph ph-database"></i> You are admin? Login here
@@ -56,6 +57,12 @@
       </div>
     </section>
 
+    <section id="aboutme" class="philosophy" style="padding: 100px 0; background: var(--bg-secondary); border-bottom: 1px solid var(--border-subtle);">
+      <div class="container" id="bio-container" style="max-width: 900px; margin: 0 auto; line-height: 1.6; color: var(--text-main); font-size: 1.1rem; text-align: center;">
+        <!-- Bio injected here -->
+      </div>
+    </section>
+
     <section id="showcase" class="showcase">
       <div class="container">
         <h2 class="section-title">The Collection</h2>
@@ -65,7 +72,7 @@
       </div>
     </section>
 
-    <section id="about" class="philosophy" style="padding: 100px 0; text-align: center; border-top: 1px solid var(--border-subtle); background: var(--bg-secondary);">
+    <section id="philosophy" class="philosophy" style="padding: 100px 0; text-align: center; border-top: 1px solid var(--border-subtle); background: var(--bg-secondary);">
       <div class="container">
         <h2 class="section-title">Philosophy</h2>
         <blockquote style="font-size: clamp(1.2rem, 3vw, 2rem); font-family: var(--font-heading); font-weight: 300; max-width: 900px; margin: 0 auto; line-height: 1.4; color: var(--text-main); font-style: italic;">
@@ -73,11 +80,21 @@
         </blockquote>
       </div>
     </section>
+
+    <section id="contact" style="padding: 100px 0; border-top: 1px solid var(--border-subtle);">
+      <div class="container" style="text-align: center;">
+        <h2 class="section-title">Contact Me</h2>
+        <div id="socials-container" style="display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
+          <!-- Socials injected here -->
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer>
     <div class="container">
-      <p>&copy; 2026 URANIII Audio. All rights reserved.</p>
+      <p>&copy; <span id="copyright-year">2026</span> URANIII Audio. All rights reserved.</p>
+      <script>document.getElementById('copyright-year').textContent = new Date().getFullYear();</script>
     </div>
   </footer>
 
