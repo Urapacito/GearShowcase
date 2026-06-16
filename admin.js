@@ -140,6 +140,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  let draggedItem = null;
+
   function renderList() {
     listContainer.innerHTML = '';
     if (products.length === 0) {
@@ -147,19 +149,64 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    products.forEach(p => {
+    products.forEach((p, index) => {
       const div = document.createElement('div');
       div.className = `list-item ${p.id === currentEditingId ? 'active' : ''}`;
+      div.setAttribute('draggable', 'true');
+      div.dataset.index = index;
+      
       div.innerHTML = `
-        <div>
+        <div style="pointer-events: none;">
           <div class="list-item-title">${p.name}</div>
           <div class="list-item-category">${p.category}</div>
         </div>
-        <div>
-          <i class="ph ph-caret-right"></i>
+        <div style="pointer-events: none;">
+          <i class="ph ph-list" style="font-size: 1.2rem; color: var(--text-muted);"></i>
         </div>
       `;
       div.onclick = () => editProduct(p.id);
+
+      // Drag and Drop Events
+      div.addEventListener('dragstart', function(e) {
+        draggedItem = this;
+        setTimeout(() => this.style.opacity = '0.4', 0);
+      });
+
+      div.addEventListener('dragend', function() {
+        setTimeout(() => {
+          this.style.opacity = '1';
+          draggedItem = null;
+        }, 0);
+      });
+
+      div.addEventListener('dragover', function(e) {
+        e.preventDefault();
+      });
+
+      div.addEventListener('dragenter', function(e) {
+        e.preventDefault();
+        this.classList.add('drag-over');
+      });
+
+      div.addEventListener('dragleave', function() {
+        this.classList.remove('drag-over');
+      });
+
+      div.addEventListener('drop', function() {
+        this.classList.remove('drag-over');
+        if (draggedItem !== this) {
+          let fromIndex = parseInt(draggedItem.dataset.index);
+          let toIndex = parseInt(this.dataset.index);
+          
+          const element = products.splice(fromIndex, 1)[0];
+          products.splice(toIndex, 0, element);
+          
+          renderList();
+          saveData();
+          showToast("Product order updated!");
+        }
+      });
+
       listContainer.appendChild(div);
     });
   }
