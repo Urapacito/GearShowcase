@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URANIII | Premium Audio Gear Showcase</title>
+  <meta name="description"
+    content="Discover unparalleled audio fidelity. An exclusive showcase of premium in-ear monitors, DACs, and high-fidelity players.">
+
+  <link rel="stylesheet" href="./style.css">
+
+  <!-- GSAP for smooth animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
+
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <!-- Google Model Viewer -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.1.1/model-viewer.min.js"></script>
+
+  <script src="./app.js" defer></script>
+</head>
+
+<body>
+
+  <header>
+    <div class="container nav-inner">
+      <a href="#" class="logo">
+        <i class="ph ph-waves"></i> URANIII
+      </a>
+      <nav class="nav-links">
+        <a href="#showcase">Showcase</a>
+        <a href="#about">Philosophy</a>
+        <a href="#support">Support</a>
+      </nav>
+      <a href="./admin.html" class="btn-admin">
+        <i class="ph ph-database"></i> You are admin? Login here
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="container">
+        <div class="hero-content">
+          <h1>Hear the Unheard.<br><span class="text-gradient">Master the Sound.</span></h1>
+          <p>An exclusive curation of the world's most precise audio instruments. Crafted for audiophiles, engineers,
+            and purists.</p>
+          <a href="#showcase" class="btn-primary">
+            Explore Collection <i class="ph ph-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="showcase" class="showcase">
+      <div class="container">
+        <h2 class="section-title">The Collection</h2>
+        <div id="product-list">
+          <!-- Dynamic product rows will be injected here via app.js -->
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="philosophy" style="padding: 100px 0; text-align: center; border-top: 1px solid var(--border-subtle); background: var(--bg-secondary);">
+      <div class="container">
+        <h2 class="section-title">Philosophy</h2>
+        <blockquote style="font-size: clamp(1.2rem, 3vw, 2rem); font-family: var(--font-heading); font-weight: 300; max-width: 900px; margin: 0 auto; line-height: 1.4; color: var(--text-main); font-style: italic;">
+          "MY EARS ARE THE ONLY 'TRULY' ENDGAME FLAGSHIP, THE GOD OF TOTL. IF THE IEMS 'AMAZING' ON PAPER BUT SOUNDS SUCKS TO MY EARS THEN IT SUCKS."
+        </blockquote>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 URANIII Audio. All rights reserved.</p>
+    </div>
+  </footer>
+
+</body>
+
+</html>

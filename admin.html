@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URANIII | Admin Dashboard</title>
+
+  <link rel="stylesheet" href="./style.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <style>
+    /* Admin Specific Styles overriding some showcase styles */
+    .admin-container {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 2rem;
+      padding: 120px 5% 50px 5%;
+      min-height: 100vh;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      max-height: calc(100vh - 150px);
+      overflow-y: auto;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      background: var(--bg-secondary);
+      color: var(--text-main);
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:hover {
+      background: var(--border-subtle);
+    }
+
+    .btn-primary {
+      background: var(--accent-gradient);
+      color: #000;
+      font-weight: 700;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .btn-danger {
+      background: rgba(255, 50, 50, 0.1);
+      color: #ff5555;
+    }
+
+    .btn-danger:hover {
+      background: rgba(255, 50, 50, 0.2);
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .spec-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    /* Product List */
+    .list-item {
+      padding: 12px;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .list-item:hover,
+    .list-item.active {
+      border-color: var(--accent-color);
+      background: rgba(0, 210, 255, 0.05);
+    }
+
+    .list-item-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .list-item-category {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+
+    /* Toast Notification */
+    .toast {
+      background: var(--text-main);
+      color: var(--bg-color);
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 600;
+      margin-top: 10px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+      transform: translateY(100%);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Login Overlay */
+    #login-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .login-box {
+      background: var(--bg-card);
+      padding: 2.5rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .login-box h2 {
+      margin-bottom: 1.5rem;
+      font-family: var(--font-heading);
+    }
+    .login-box input {
+      margin-bottom: 1rem;
+    }
+  </style>
+  <script src="./admin.js" defer></script>
+</head>
+
+<body>
+
+  <div id="login-overlay">
+    <div class="login-box">
+      <h2><i class="ph ph-waves"></i> URANIII Admin</h2>
+      <form id="login-form">
+        <input type="text" id="login-username" placeholder="Username" required>
+        <input type="password" id="login-password" placeholder="Password" required>
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="admin-app" style="display: none;">
+    <header>
+    <div class="container nav-inner">
+      <a href="./index.html" class="logo">
+        <i class="ph ph-waves"></i> URANIII <span
+          style="font-size: 0.8rem; color: var(--text-muted); font-weight: 400; margin-left: 10px;">Admin
+          Dashboard</span>
+      </a>
+      <div class="nav-links">
+        <button id="btn-import-template" class="btn">
+          <i class="ph ph-file-code"></i> JSON Template
+        </button>
+        <button id="btn-import" class="btn">
+          <i class="ph ph-upload-simple"></i> Import JSON
+        </button>
+        <input type="file" id="file-import" accept=".json" style="display: none;">
+        <button id="btn-export" class="btn btn-primary">
+          <i class="ph ph-download-simple"></i> Export products.json
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-container">
+    <!-- Sidebar: Product List -->
+    <aside class="panel">
+      <div class="panel-header">
+        <h3>Products</h3>
+        <button id="btn-add-new" class="btn"><i class="ph ph-plus"></i> New</button>
+      </div>
+      <div id="admin-product-list">
+        <!-- List populated by JS -->
+      </div>
+    </aside>
+
+    <!-- Editor -->
+    <section class="panel">
+      <div class="panel-header">
+        <h3 id="editor-title">Edit Product</h3>
+        <button id="btn-delete" class="btn btn-danger" style="display: none;">
+          <i class="ph ph-trash"></i> Delete
+        </button>
+      </div>
+
+      <div id="editor-content" class="empty-state">
+        Select a product to edit or create a new one.
+      </div>
+
+      <form id="product-form" style="display: none;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="prod-id">Product ID (Unique, lowercase, hyphens)</label>
+            <input type="text" id="prod-id" required placeholder="e.g. fiio-fx17">
+          </div>
+          <div class="form-group">
+            <label for="prod-name">Product Name</label>
+            <input type="text" id="prod-name" required>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="prod-category">Category</label>
+            <input type="text" id="prod-category" required placeholder="e.g. In-Ear Monitor">
+          </div>
+          <div class="form-group">
+            <label for="prod-price">Price (USD)</label>
+            <input type="number" id="prod-price" step="0.01" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="prod-desc">Description</label>
+          <textarea id="prod-desc" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Images (Upload or Add URL)</label>
+          <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <input type="file" id="prod-image-upload" multiple accept="image/*" style="flex: 1;">
+            <input type="url" id="prod-image-url" placeholder="Add Image URL..." style="flex: 2;">
+            <button type="button" id="btn-add-image-url" class="btn">Add URL</button>
+          </div>
+          <div id="images-container" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
+            <!-- Image previews will appear here -->
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="prod-model">3D Model URL (.glb) - Optional</label>
+          <input type="url" id="prod-model" placeholder="https://...">
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <label style="margin: 0;">Technical Specs</label>
+            <button type="button" id="btn-add-spec" class="btn"><i class="ph ph-plus"></i> Add Spec</button>
+          </div>
+          <div id="specs-container">
+            <!-- Spec rows injected here -->
+          </div>
+        </div>
+
+        <div
+          style="margin-top: 2rem; border-top: 1px solid var(--border-subtle); padding-top: 1rem; display: flex; justify-content: flex-end; gap: 1rem;">
+          <button type="button" id="btn-cancel" class="btn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Product</button>
+        </div>
+      </form>
+    </section>
+  </main>
+  </div>
+
+  <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column;"></div>
+</body>
+
+</html>
