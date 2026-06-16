@@ -71,6 +71,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch('./database/account.json');
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Account database missing or invalid");
+      }
       const account = await response.json();
       
       if (user === account.username && pass === account.password) {
@@ -104,7 +108,12 @@ document.addEventListener("DOMContentLoaded", () => {
         response = await fetch('./database/products.json');
       }
       if (response.ok) {
-        products = await response.json();
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          products = await response.json();
+        } else {
+          products = [];
+        }
         renderList();
       }
     } catch (e) {
@@ -251,7 +260,12 @@ document.addEventListener("DOMContentLoaded", () => {
       let response = await fetch('/api/settings');
       if (!response.ok) response = await fetch('./database/settings.json');
       if (response.ok) {
-        siteSettings = await response.json();
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          siteSettings = await response.json();
+        } else {
+          siteSettings = { bio: '', socials: {} };
+        }
         bioEditor.root.innerHTML = siteSettings.bio || '';
         if (siteSettings.socials) {
           document.getElementById('social-discord').value = siteSettings.socials.discord || '';

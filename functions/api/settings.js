@@ -8,10 +8,13 @@ export async function onRequestGet(context) {
       const staticUrl = new URL("/database/settings.json", context.request.url);
       const staticRes = await fetch(staticUrl);
       if (staticRes.ok) {
-        const staticData = await staticRes.json();
-        return new Response(JSON.stringify(staticData), {
-          headers: { "Content-Type": "application/json" }
-        });
+        const contentType = staticRes.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const staticData = await staticRes.json();
+          return new Response(JSON.stringify(staticData), {
+            headers: { "Content-Type": "application/json" }
+          });
+        }
       }
       return new Response(JSON.stringify({ bio: "", socials: {} }), {
         headers: { "Content-Type": "application/json" }

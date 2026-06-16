@@ -12,6 +12,10 @@ document.addEventListener("DOMContentLoaded", () => {
         response = await fetch('./database/products.json');
       }
       if (!response.ok) throw new Error("Network response was not ok");
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Response is not JSON");
+      }
       const products = await response.json();
       renderProducts(products);
       initAnimations();
@@ -145,6 +149,9 @@ document.addEventListener("DOMContentLoaded", () => {
       let response = await fetch('/api/settings');
       if (!response.ok) response = await fetch('./database/settings.json');
       if (!response.ok) return;
+      
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) return;
       
       const settings = await response.json();
       
