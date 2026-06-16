@@ -17,5 +17,5 @@ __pycache__/
 .idea/
 *.sw?
 
-database/*.json
-database/
+database/products.json
+database/settings.json

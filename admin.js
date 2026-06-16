@@ -70,14 +70,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const pass = document.getElementById("login-password").value;
 
     try {
-      const response = await fetch('./database/account.json');
+      let response = await fetch('/api/account');
+      if (!response.ok) response = await fetch('./database/account.json');
+      
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
         throw new Error("Account database missing or invalid");
       }
       const account = await response.json();
       
-      if (user === account.username && pass === account.password) {
+      const msgBuffer = new TextEncoder().encode(pass);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      if (user === account.username && hashHex === account.password) {
         const expires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
         localStorage.setItem('uraniii_admin_auth', JSON.stringify({ expires }));
         loginOverlay.style.display = 'none';
@@ -168,6 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
     editorTitle.textContent = `Edit: ${product.name}`;
 
     document.getElementById('prod-id').value = product.id;
+
     // Disable ID editing for existing products to prevent reference issues
     document.getElementById('prod-id').disabled = true; 
     document.getElementById('prod-name').value = product.name;
@@ -475,6 +483,62 @@ document.addEventListener("DOMContentLoaded", () => {
       downloadAnchorNode.click();
       downloadAnchorNode.remove();
       URL.revokeObjectURL(url);
+    };
+  }
+  // Password Form
+  const passwordForm = document.getElementById('password-form');
+  if (passwordForm) {
+    passwordForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const currentPass = document.getElementById('sec-current-pass').value;
+      const newPass = document.getElementById('sec-new-pass').value;
+      const confirmPass = document.getElementById('sec-confirm-pass').value;
+
+      if (newPass !== confirmPass) {
+        showToast("New passwords do not match!");
+        return;
+      }
+
+      try {
+        let response = await fetch('/api/account');
+        if (!response.ok) response = await fetch('./database/account.json');
+        const account = await response.json();
+
+        // Hash current password input
+        const msgBuffer = new TextEncoder().encode(currentPass);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const currentHashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+        if (currentHashHex !== account.password) {
+          showToast("Current password is incorrect!");
+          return;
+        }
+
+        // Hash new password
+        const newMsgBuffer = new TextEncoder().encode(newPass);
+        const newHashBuffer = await crypto.subtle.digest('SHA-256', newMsgBuffer);
+        const newHashArray = Array.from(new Uint8Array(newHashBuffer));
+        const newHashHex = newHashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+        const newAccount = { username: account.username, password: newHashHex };
+
+        const saveRes = await fetch('/api/account', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newAccount)
+        });
+
+        if (saveRes.ok) {
+          showToast("Password updated successfully!");
+          passwordForm.reset();
+        } else {
+          showToast("Failed to update password.");
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Error updating password.");
+      }
     };
   }
 });
