@@ -715,6 +715,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cropperModal.style.display = 'flex';
         
         if (cropperInstance) cropperInstance.destroy();
+        setActiveAspectBtn('btn-aspect-free');
         
         setTimeout(() => {
           cropperInstance = new Cropper(cropperImage, {
@@ -738,6 +739,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   btnRotateLeft.onclick = () => cropperInstance && cropperInstance.rotate(-90);
   btnRotateRight.onclick = () => cropperInstance && cropperInstance.rotate(90);
+
+  const aspectBtns = ['btn-aspect-free', 'btn-aspect-1-1', 'btn-aspect-3-4', 'btn-aspect-16-9'];
+  function setActiveAspectBtn(id) {
+    aspectBtns.forEach(btnId => {
+      document.getElementById(btnId).style.borderColor = btnId === id ? 'var(--accent-color)' : 'var(--border-subtle)';
+    });
+  }
+
+  document.getElementById('btn-aspect-free').onclick = () => { if(cropperInstance) cropperInstance.setAspectRatio(NaN); setActiveAspectBtn('btn-aspect-free'); };
+  document.getElementById('btn-aspect-1-1').onclick = () => { if(cropperInstance) cropperInstance.setAspectRatio(1); setActiveAspectBtn('btn-aspect-1-1'); };
+  document.getElementById('btn-aspect-3-4').onclick = () => { if(cropperInstance) cropperInstance.setAspectRatio(3/4); setActiveAspectBtn('btn-aspect-3-4'); };
+  document.getElementById('btn-aspect-16-9').onclick = () => { if(cropperInstance) cropperInstance.setAspectRatio(16/9); setActiveAspectBtn('btn-aspect-16-9'); };
 
   btnCancelCrop.onclick = () => {
     cropperModal.style.display = 'none';

@@ -585,6 +585,12 @@
   <div id="cropper-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center;">
     <div style="background: var(--bg-card); padding: 20px; border-radius: var(--radius-md); max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column;">
       <h3 style="margin-bottom: 10px;">Crop & Rotate Image</h3>
+      <div style="margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <button id="btn-aspect-free" class="btn" style="padding: 5px 10px; font-size: 0.8rem; border-color: var(--accent-color);">Free</button>
+        <button id="btn-aspect-1-1" class="btn" style="padding: 5px 10px; font-size: 0.8rem;">1:1 (Square)</button>
+        <button id="btn-aspect-3-4" class="btn" style="padding: 5px 10px; font-size: 0.8rem;">3:4</button>
+        <button id="btn-aspect-16-9" class="btn" style="padding: 5px 10px; font-size: 0.8rem;">16:9</button>
+      </div>
       <div style="flex: 1; min-height: 0; overflow: hidden; max-height: 60vh;">
         <img id="cropper-image" style="max-width: 100%; display: block;">
       </div>
