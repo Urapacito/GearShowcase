@@ -217,12 +217,73 @@ document.addEventListener("DOMContentLoaded", () => {
     const activeMediaEl = document.getElementById('timeline-media-container');
 
     let activeIndex = Math.floor(timelineData.length / 2);
+    const angleStep = 18; 
+    let currentAngleOffset = -activeIndex * angleStep;
     const radius = 300;
     const centerY = wheel.clientHeight + 50; 
-    const angleStep = 18; 
     
     const dots = [];
     
+    let isDragging = false;
+    let startX = 0;
+    let startAngleOffset = 0;
+    wheel.style.cursor = 'grab';
+
+    function handleDragStart(e) {
+      if (e.target.closest('.carousel-btn')) return; // Ignore drag on buttons
+      isDragging = true;
+      startX = e.clientX || (e.touches && e.touches[0].clientX);
+      startAngleOffset = currentAngleOffset;
+      wheel.style.cursor = 'grabbing';
+      
+      dots.forEach(dotObj => {
+        dotObj.el.style.transition = 'none';
+      });
+      
+      const line = document.getElementById('timeline-line');
+      if (line) line.style.height = '0px';
+      
+      activeYearEl.style.opacity = '0';
+      if (activeTitleEl) activeTitleEl.style.opacity = '0';
+      activeDescEl.style.opacity = '0';
+      if (activeMediaEl) activeMediaEl.style.opacity = '0';
+    }
+
+    function handleDragMove(e) {
+      if (!isDragging) return;
+      const currentX = e.clientX || (e.touches && e.touches[0].clientX);
+      const dx = currentX - startX;
+      
+      const sensitivity = 0.3; 
+      currentAngleOffset = startAngleOffset + (dx * sensitivity);
+      
+      renderWheelAtAngle(currentAngleOffset);
+    }
+
+    function handleDragEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+      wheel.style.cursor = 'grab';
+      
+      dots.forEach(dotObj => {
+        dotObj.el.style.transition = 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+      });
+      
+      let targetIndex = Math.round(-currentAngleOffset / angleStep);
+      targetIndex = Math.max(0, Math.min(timelineData.length - 1, targetIndex));
+      
+      activeIndex = targetIndex;
+      updateWheel();
+    }
+
+    wheel.addEventListener('mousedown', handleDragStart);
+    window.addEventListener('mousemove', handleDragMove);
+    window.addEventListener('mouseup', handleDragEnd);
+    
+    wheel.addEventListener('touchstart', handleDragStart, {passive: true});
+    window.addEventListener('touchmove', handleDragMove, {passive: true});
+    window.addEventListener('touchend', handleDragEnd);
+
     timelineData.forEach((item, index) => {
       const dotContainer = document.createElement('div');
       dotContainer.style.position = 'absolute';
@@ -260,16 +321,10 @@ document.addEventListener("DOMContentLoaded", () => {
       dots.push({ el: dotContainer, dot, text, data: item });
     });
 
-    function updateWheel() {
+    function renderWheelAtAngle(angleOffset) {
       const centerX = wheel.clientWidth / 2;
-      const line = document.getElementById('timeline-line');
-      
-      // Retract the line
-      if (line) line.style.height = '0px';
-
       dots.forEach((dotObj, i) => {
-        const offsetIndex = i - activeIndex;
-        const angleDeg = -90 + (offsetIndex * angleStep);
+        const angleDeg = -90 + (i * angleStep) + angleOffset;
         const angleRad = angleDeg * (Math.PI / 180);
         
         const x = centerX + radius * Math.cos(angleRad);
@@ -278,7 +333,9 @@ document.addEventListener("DOMContentLoaded", () => {
         dotObj.el.style.left = `${x}px`;
         dotObj.el.style.top = `${y}px`;
         
-        if (i === activeIndex) {
+        const distanceToCenter = Math.abs(angleDeg + 90);
+        
+        if (distanceToCenter < 5) {
           dotObj.dot.style.background = 'var(--accent-color)';
           dotObj.dot.style.transform = 'scale(1.5)';
           dotObj.dot.style.boxShadow = '0 0 15px var(--accent-color)';
@@ -303,6 +360,13 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
       });
+    }
+
+    function updateWheel() {
+      const line = document.getElementById('timeline-line');
+      
+      currentAngleOffset = -activeIndex * angleStep;
+      renderWheelAtAngle(currentAngleOffset);
 
       const activeData = timelineData[activeIndex];
       activeYearEl.style.opacity = '0';
