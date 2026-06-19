@@ -57,12 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return false;
   }
 
-  if (checkAuth()) {
-    loginOverlay.style.display = 'none';
-    adminApp.style.display = 'block';
-    loadData();
-    loadSettings();
-  }
+
 
   loginForm.onsubmit = async (e) => {
     e.preventDefault();
@@ -91,6 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
         adminApp.style.display = 'block';
         loadData();
         loadSettings();
+        window.loadTimeline();
         showToast("Logged in successfully!");
       } else {
         showToast("Invalid username or password.");
@@ -303,12 +299,12 @@ document.addEventListener("DOMContentLoaded", () => {
       tabContents.forEach(c => c.style.display = 'none');
       tab.classList.add('active');
       const targetId = tab.getAttribute('data-target');
-      document.getElementById(targetId).style.display = targetId === 'tab-products' ? 'grid' : 'block';
+      document.getElementById(targetId).style.display = (targetId === 'tab-products' || targetId === 'tab-journey') ? 'grid' : 'block';
     };
   });
 
   // Settings Logic (Bio & Socials)
-  let siteSettings = { bio: '', socials: {} };
+  var siteSettings = { bio: '', socials: {} };
 
   async function loadSettings() {
     try {
@@ -532,6 +528,282 @@ document.addEventListener("DOMContentLoaded", () => {
       URL.revokeObjectURL(url);
     };
   }
+
+  // --- TIMELINE LOGIC ---
+  var timeline = [];
+  let currentTlEditingId = null;
+  let currentTlImage = null;
+  let cropperInstance = null;
+
+  const tlDescEditor = new Quill('#tl-desc-editor', {
+    theme: 'snow',
+    placeholder: 'Enter timeline event details...'
+  });
+
+  const tlListContainer = document.getElementById('admin-timeline-list');
+  const tlForm = document.getElementById('timeline-form');
+  const tlEditorContent = document.getElementById('timeline-editor-content');
+  const tlEditorTitle = document.getElementById('timeline-editor-title');
+  const btnAddTimeline = document.getElementById('btn-add-timeline');
+  const btnDeleteTimeline = document.getElementById('btn-delete-timeline');
+  const btnCancelTimeline = document.getElementById('btn-cancel-timeline');
+  const btnExportTimeline = document.getElementById('btn-export-timeline');
+  const btnImportTimeline = document.getElementById('btn-import-timeline');
+  const fileImportTimeline = document.getElementById('file-import-timeline');
+
+  const tlImageUpload = document.getElementById('tl-image-upload');
+  const cropperModal = document.getElementById('cropper-modal');
+  const cropperImage = document.getElementById('cropper-image');
+  const btnRotateLeft = document.getElementById('btn-rotate-left');
+  const btnRotateRight = document.getElementById('btn-rotate-right');
+  const btnCancelCrop = document.getElementById('btn-cancel-crop');
+  const btnSaveCrop = document.getElementById('btn-save-crop');
+  const btnRemoveTlImage = document.getElementById('btn-remove-tl-image');
+  const tlImagePreview = document.getElementById('tl-image-preview');
+  const tlImagePreviewContainer = document.getElementById('tl-image-preview-container');
+
+  window.loadTimeline = async function() {
+    try {
+      let response = await fetch('/api/timeline');
+      if (!response.ok) response = await fetch('./database/timeline.json');
+      if (response.ok) {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          timeline = await response.json();
+        } else {
+          timeline = [];
+        }
+        timeline.sort((a, b) => parseInt(a.year) - parseInt(b.year));
+        renderTimelineList();
+      }
+    } catch (e) {
+      console.error("Could not load timeline:", e);
+    }
+  }
+
+  async function saveTimelineData() {
+    try {
+      await fetch('/api/timeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(timeline, null, 2)
+      });
+    } catch(err) {
+      console.warn("Could not save timeline to cloud automatically.", err);
+    }
+  }
+
+  function renderTimelineList() {
+    tlListContainer.innerHTML = '';
+    if (timeline.length === 0) {
+      tlListContainer.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--text-muted);">No events found.</div>`;
+      return;
+    }
+
+    timeline.forEach(t => {
+      const div = document.createElement('div');
+      div.className = `list-item ${t.id === currentTlEditingId ? 'active' : ''}`;
+      div.innerHTML = `
+        <div>
+          <div class="list-item-title">${t.year}</div>
+          <div class="list-item-category">Event</div>
+        </div>
+        <div>
+          <i class="ph ph-caret-right"></i>
+        </div>
+      `;
+      div.onclick = () => editTimelineEvent(t.id);
+      tlListContainer.appendChild(div);
+    });
+  }
+
+  function editTimelineEvent(id) {
+    currentTlEditingId = id;
+    const event = timeline.find(t => t.id === id);
+    if (!event) return;
+
+    tlEditorContent.style.display = 'none';
+    tlForm.style.display = 'block';
+    btnDeleteTimeline.style.display = 'inline-flex';
+    tlEditorTitle.textContent = `Edit Event: ${event.year}`;
+
+    document.getElementById('tl-year').value = event.year;
+    tlDescEditor.root.innerHTML = event.content || '';
+    
+    currentTlImage = event.image || null;
+    updateTlImagePreview();
+
+    renderTimelineList();
+  }
+
+  function updateTlImagePreview() {
+    if (currentTlImage) {
+      tlImagePreview.src = currentTlImage;
+      tlImagePreviewContainer.style.display = 'block';
+    } else {
+      tlImagePreviewContainer.style.display = 'none';
+      tlImagePreview.src = '';
+    }
+  }
+
+  btnAddTimeline.onclick = () => {
+    currentTlEditingId = null;
+    tlEditorContent.style.display = 'none';
+    tlForm.style.display = 'block';
+    btnDeleteTimeline.style.display = 'none';
+    tlEditorTitle.textContent = "Create New Timeline Event";
+    tlForm.reset();
+    tlDescEditor.root.innerHTML = '';
+    currentTlImage = null;
+    updateTlImagePreview();
+    renderTimelineList();
+  };
+
+  btnCancelTimeline.onclick = () => {
+    tlForm.style.display = 'none';
+    tlEditorContent.style.display = 'block';
+    tlEditorTitle.textContent = "Edit Timeline Event";
+    currentTlEditingId = null;
+    renderTimelineList();
+  };
+
+  btnRemoveTlImage.onclick = () => {
+    currentTlImage = null;
+    updateTlImagePreview();
+  };
+
+  tlImageUpload.onchange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        cropperImage.src = evt.target.result;
+        cropperModal.style.display = 'flex';
+        
+        if (cropperInstance) cropperInstance.destroy();
+        
+        setTimeout(() => {
+          cropperInstance = new Cropper(cropperImage, {
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 1,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+          });
+        }, 100);
+      };
+      reader.readAsDataURL(file);
+    }
+    tlImageUpload.value = '';
+  };
+
+  btnRotateLeft.onclick = () => cropperInstance && cropperInstance.rotate(-90);
+  btnRotateRight.onclick = () => cropperInstance && cropperInstance.rotate(90);
+
+  btnCancelCrop.onclick = () => {
+    cropperModal.style.display = 'none';
+    if (cropperInstance) cropperInstance.destroy();
+  };
+
+  btnSaveCrop.onclick = () => {
+    if (cropperInstance) {
+      const canvas = cropperInstance.getCroppedCanvas({
+        maxWidth: 1024,
+        maxHeight: 1024
+      });
+      currentTlImage = canvas.toDataURL('image/jpeg', 0.8);
+      updateTlImagePreview();
+      cropperModal.style.display = 'none';
+      cropperInstance.destroy();
+    }
+  };
+
+  tlForm.onsubmit = (e) => {
+    e.preventDefault();
+    const year = document.getElementById('tl-year').value.trim();
+    if (!year) return showToast("Year is required");
+
+    const newEvent = {
+      id: currentTlEditingId || 'tl-' + Date.now(),
+      year: year,
+      content: tlDescEditor.root.innerHTML,
+      image: currentTlImage
+    };
+
+    if (currentTlEditingId) {
+      const idx = timeline.findIndex(t => t.id === currentTlEditingId);
+      if (idx !== -1) timeline[idx] = newEvent;
+      showToast("Event updated!");
+    } else {
+      if (timeline.find(t => t.year === year)) {
+        return showToast("An event for this year already exists!");
+      }
+      timeline.push(newEvent);
+      showToast("Event created!");
+    }
+
+    timeline.sort((a, b) => parseInt(a.year) - parseInt(b.year));
+    saveTimelineData();
+    editTimelineEvent(newEvent.id);
+  };
+
+  btnDeleteTimeline.onclick = () => {
+    if (!currentTlEditingId) return;
+    if (confirm("Are you sure you want to delete this event?")) {
+      timeline = timeline.filter(t => t.id !== currentTlEditingId);
+      saveTimelineData();
+      btnCancelTimeline.onclick();
+      showToast("Event deleted!");
+    }
+  };
+
+  btnExportTimeline.onclick = () => {
+    const jsonString = JSON.stringify(timeline, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", url);
+    downloadAnchorNode.setAttribute("download", "timeline.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  if(btnImportTimeline) {
+      btnImportTimeline.onclick = () => fileImportTimeline.click();
+  }
+  if(fileImportTimeline) {
+      fileImportTimeline.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const imported = JSON.parse(evt.target.result);
+            if (Array.isArray(imported)) {
+              timeline = imported;
+              timeline.sort((a, b) => parseInt(a.year) - parseInt(b.year));
+              saveTimelineData();
+              renderTimelineList();
+              showToast("Timeline imported!");
+            } else {
+              showToast("Invalid JSON format. Expected an array.");
+            }
+          } catch (err) {
+            showToast("Error parsing JSON file.");
+          }
+        };
+        reader.readAsText(file);
+        fileImportTimeline.value = '';
+      };
+  }
+
   // Password Form
   const passwordForm = document.getElementById('password-form');
   if (passwordForm) {
@@ -587,5 +859,16 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("Error updating password.");
       }
     };
+  }
+
+  // --- STARTUP LOGIC ---
+  if (checkAuth()) {
+    loginOverlay.style.display = 'none';
+    adminApp.style.display = 'block';
+    loadData();
+    loadSettings();
+    if (typeof window.loadTimeline === 'function') {
+      window.loadTimeline();
+    }
   }
 });

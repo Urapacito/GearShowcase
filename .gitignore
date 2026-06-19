@@ -19,3 +19,4 @@ __pycache__/
 
 database/products.json
 database/settings.json
+database/timeline.json

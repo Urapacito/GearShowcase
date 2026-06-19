@@ -191,6 +191,148 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function fetchTimeline() {
+    try {
+      let response = await fetch('/api/timeline');
+      if (!response.ok) response = await fetch('./database/timeline.json');
+      if (!response.ok) return;
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) return;
+      
+      const timelineData = await response.json();
+      if (timelineData && timelineData.length > 0) {
+        document.getElementById('timeline').style.display = 'block';
+        initTimelineWheel(timelineData);
+      }
+    } catch(e) {
+      console.warn("Could not load timeline", e);
+    }
+  }
+
+  function initTimelineWheel(timelineData) {
+    const wheel = document.getElementById('timeline-wheel');
+    const activeYearEl = document.getElementById('timeline-active-year');
+    const activeDescEl = document.getElementById('timeline-active-desc');
+    const activeImgEl = document.getElementById('timeline-active-img');
+
+    let activeIndex = Math.floor(timelineData.length / 2);
+    const radius = 300;
+    const centerY = wheel.clientHeight + 50; 
+    const angleStep = 18; 
+    
+    const dots = [];
+    
+    timelineData.forEach((item, index) => {
+      const dotContainer = document.createElement('div');
+      dotContainer.style.position = 'absolute';
+      dotContainer.style.transform = 'translate(-50%, -50%)';
+      dotContainer.style.transition = 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+      dotContainer.style.cursor = 'pointer';
+      dotContainer.style.textAlign = 'center';
+      dotContainer.style.zIndex = '10';
+      
+      const dot = document.createElement('div');
+      dot.style.width = '16px';
+      dot.style.height = '16px';
+      dot.style.background = '#555';
+      dot.style.borderRadius = '50%';
+      dot.style.margin = '0 auto';
+      dot.style.transition = 'all 0.3s';
+      
+      const text = document.createElement('div');
+      text.textContent = item.year;
+      text.style.color = '#777';
+      text.style.marginTop = '12px';
+      text.style.fontSize = '1.1rem';
+      text.style.transition = 'all 0.3s';
+      text.style.fontFamily = 'var(--font-heading)';
+
+      dotContainer.appendChild(dot);
+      dotContainer.appendChild(text);
+      wheel.appendChild(dotContainer);
+      
+      dotContainer.onclick = () => {
+        activeIndex = index;
+        updateWheel();
+      };
+      
+      dots.push({ el: dotContainer, dot, text, data: item });
+    });
+
+    function updateWheel() {
+      const centerX = wheel.clientWidth / 2;
+      const line = document.getElementById('timeline-line');
+      
+      // Retract the line
+      if (line) line.style.height = '0px';
+
+      dots.forEach((dotObj, i) => {
+        const offsetIndex = i - activeIndex;
+        const angleDeg = -90 + (offsetIndex * angleStep);
+        const angleRad = angleDeg * (Math.PI / 180);
+        
+        const x = centerX + radius * Math.cos(angleRad);
+        const y = centerY + radius * Math.sin(angleRad);
+        
+        dotObj.el.style.left = `${x}px`;
+        dotObj.el.style.top = `${y}px`;
+        
+        if (i === activeIndex) {
+          dotObj.dot.style.background = 'var(--accent-color)';
+          dotObj.dot.style.transform = 'scale(1.5)';
+          dotObj.dot.style.boxShadow = '0 0 15px var(--accent-color)';
+          dotObj.text.style.color = 'var(--accent-color)';
+          dotObj.text.style.fontSize = '1.4rem';
+          dotObj.text.style.fontWeight = 'bold';
+          dotObj.el.style.opacity = '1';
+        } else {
+          dotObj.dot.style.background = '#555';
+          dotObj.dot.style.transform = 'scale(1)';
+          dotObj.dot.style.boxShadow = 'none';
+          dotObj.text.style.color = '#777';
+          dotObj.text.style.fontSize = '1.1rem';
+          dotObj.text.style.fontWeight = 'normal';
+          
+          if (y > wheel.clientHeight - 20) {
+            dotObj.el.style.opacity = '0';
+            dotObj.el.style.pointerEvents = 'none';
+          } else {
+            dotObj.el.style.opacity = '1';
+            dotObj.el.style.pointerEvents = 'auto';
+          }
+        }
+      });
+
+      const activeData = timelineData[activeIndex];
+      activeYearEl.style.opacity = '0';
+      activeDescEl.style.opacity = '0';
+      activeImgEl.style.opacity = '0';
+      
+      setTimeout(() => {
+        // Protrude the line back
+        if (line) line.style.height = '250px';
+
+        activeYearEl.textContent = activeData.year;
+        activeDescEl.innerHTML = activeData.content;
+        
+        if (activeData.image) {
+          activeImgEl.src = activeData.image;
+          activeImgEl.style.display = 'inline-block';
+        } else {
+          activeImgEl.style.display = 'none';
+        }
+        
+        activeYearEl.style.opacity = '1';
+        activeDescEl.style.opacity = '1';
+        if (activeData.image) activeImgEl.style.opacity = '1';
+      }, 300);
+    }
+
+    window.addEventListener('resize', updateWheel);
+    updateWheel();
+  }
+
   fetchProducts();
   fetchSettings();
+  fetchTimeline();
 });

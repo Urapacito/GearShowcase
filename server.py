@@ -13,6 +13,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.path = '/database/settings.json'
         elif self.path == '/api/account':
             self.path = '/database/account.json'
+        elif self.path == '/api/timeline':
+            self.path = '/database/timeline.json'
         return super().do_GET()
 
     def do_POST(self):
@@ -54,6 +56,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             
             try:
                 with open('database/account.json', 'wb') as f:
+                    f.write(post_data)
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(b'{"status":"success"}')
+            except Exception as e:
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(f'{{"error":"{str(e)}"}}'.encode())
+        elif self.path == '/api/timeline':
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            
+            try:
+                with open('database/timeline.json', 'wb') as f:
                     f.write(post_data)
                 
                 self.send_response(200)
