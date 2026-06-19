@@ -383,6 +383,20 @@ footer {
   color: #000;
 }
 
+/* Typewriter Effect */
+.typewriter-cursor {
+  display: inline-block;
+  color: var(--accent-color);
+  font-weight: 400;
+  margin-left: 2px;
+  animation: blink-cursor 1s step-end infinite;
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 .carousel-prev {
   left: 10px;
 }

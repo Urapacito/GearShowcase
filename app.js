@@ -415,6 +415,45 @@ document.addEventListener("DOMContentLoaded", () => {
     updateWheel();
   }
 
+  // Typewriter Effect for Philosophy Section
+  const philosophyQuote = document.getElementById('philosophy-quote');
+  if (philosophyQuote) {
+    const fullText = philosophyQuote.getAttribute('data-quote');
+    const textSpan = philosophyQuote.querySelector('.typewriter-text');
+    if (fullText && textSpan) {
+      let currentIndex = 0;
+      let isDeleting = false;
+      let typeSpeed = 50;
+
+      function typeWriter() {
+        if (!isDeleting && currentIndex <= fullText.length) {
+          textSpan.textContent = fullText.substring(0, currentIndex);
+          currentIndex++;
+          typeSpeed = 50 + Math.random() * 40; // Human-like typing speed
+          
+          if (currentIndex > fullText.length) {
+            isDeleting = true;
+            typeSpeed = 5000; // Wait 5 seconds at the end
+          }
+        } else if (isDeleting && currentIndex >= 0) {
+          textSpan.textContent = fullText.substring(0, currentIndex);
+          currentIndex--;
+          typeSpeed = 15 + Math.random() * 20; // Faster backspace speed
+          
+          if (currentIndex < 0) {
+            isDeleting = false;
+            currentIndex = 0;
+            typeSpeed = 1000; // Wait 1 second before re-typing
+          }
+        }
+        setTimeout(typeWriter, typeSpeed);
+      }
+      
+      // Start typing effect
+      setTimeout(typeWriter, 1000);
+    }
+  }
+
   fetchProducts();
   fetchSettings();
   fetchTimeline();
