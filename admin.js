@@ -532,7 +532,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- TIMELINE LOGIC ---
   var timeline = [];
   let currentTlEditingId = null;
-  let currentTlImage = null;
+  let currentTlImages = [];
   let cropperInstance = null;
 
   const tlDescEditor = new Quill('#tl-desc-editor', {
@@ -558,9 +558,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnRotateRight = document.getElementById('btn-rotate-right');
   const btnCancelCrop = document.getElementById('btn-cancel-crop');
   const btnSaveCrop = document.getElementById('btn-save-crop');
-  const btnRemoveTlImage = document.getElementById('btn-remove-tl-image');
-  const tlImagePreview = document.getElementById('tl-image-preview');
-  const tlImagePreviewContainer = document.getElementById('tl-image-preview-container');
+  const btnImportTimelineImgUrl = document.getElementById('btn-import-timeline-img-url');
+  const tlImagesContainer = document.getElementById('tl-images-container');
 
   window.loadTimeline = async function() {
     try {
@@ -628,23 +627,62 @@ document.addEventListener("DOMContentLoaded", () => {
     tlEditorTitle.textContent = `Edit Event: ${event.year}`;
 
     document.getElementById('tl-year').value = event.year;
+    document.getElementById('tl-title').value = event.title || '';
     tlDescEditor.root.innerHTML = event.content || '';
     
-    currentTlImage = event.image || null;
-    updateTlImagePreview();
+    currentTlImages = event.images || (event.image ? [event.image] : []);
+    renderTlImages();
 
     renderTimelineList();
   }
 
-  function updateTlImagePreview() {
-    if (currentTlImage) {
-      tlImagePreview.src = currentTlImage;
-      tlImagePreviewContainer.style.display = 'block';
-    } else {
-      tlImagePreviewContainer.style.display = 'none';
-      tlImagePreview.src = '';
-    }
+  function renderTlImages() {
+    tlImagesContainer.innerHTML = '';
+    currentTlImages.forEach((imgSrc, idx) => {
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'relative';
+      wrapper.style.width = '100px';
+      wrapper.style.height = '100px';
+      wrapper.style.borderRadius = '8px';
+      wrapper.style.overflow = 'hidden';
+      wrapper.style.border = '1px solid var(--border-subtle)';
+
+      const img = document.createElement('img');
+      img.src = imgSrc;
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'cover';
+
+      const btnRm = document.createElement('button');
+      btnRm.innerHTML = '<i class="ph ph-x"></i>';
+      btnRm.style.position = 'absolute';
+      btnRm.style.top = '4px';
+      btnRm.style.right = '4px';
+      btnRm.style.background = 'rgba(255,0,0,0.8)';
+      btnRm.style.color = '#fff';
+      btnRm.style.border = 'none';
+      btnRm.style.borderRadius = '4px';
+      btnRm.style.cursor = 'pointer';
+      btnRm.style.padding = '4px';
+      
+      btnRm.onclick = () => {
+        currentTlImages.splice(idx, 1);
+        renderTlImages();
+      };
+
+      wrapper.appendChild(img);
+      wrapper.appendChild(btnRm);
+      tlImagesContainer.appendChild(wrapper);
+    });
   }
+
+  btnImportTimelineImgUrl.onclick = () => {
+    const url = prompt("Enter image URL:");
+    if (url) {
+      currentTlImages.push(url);
+      renderTlImages();
+    }
+  };
 
   btnAddTimeline.onclick = () => {
     currentTlEditingId = null;
@@ -653,9 +691,10 @@ document.addEventListener("DOMContentLoaded", () => {
     btnDeleteTimeline.style.display = 'none';
     tlEditorTitle.textContent = "Create New Timeline Event";
     tlForm.reset();
+    document.getElementById('tl-title').value = '';
     tlDescEditor.root.innerHTML = '';
-    currentTlImage = null;
-    updateTlImagePreview();
+    currentTlImages = [];
+    renderTlImages();
     renderTimelineList();
   };
 
@@ -665,11 +704,6 @@ document.addEventListener("DOMContentLoaded", () => {
     tlEditorTitle.textContent = "Edit Timeline Event";
     currentTlEditingId = null;
     renderTimelineList();
-  };
-
-  btnRemoveTlImage.onclick = () => {
-    currentTlImage = null;
-    updateTlImagePreview();
   };
 
   tlImageUpload.onchange = (e) => {
@@ -716,8 +750,8 @@ document.addEventListener("DOMContentLoaded", () => {
         maxWidth: 1024,
         maxHeight: 1024
       });
-      currentTlImage = canvas.toDataURL('image/jpeg', 0.8);
-      updateTlImagePreview();
+      currentTlImages.push(canvas.toDataURL('image/jpeg', 0.8));
+      renderTlImages();
       cropperModal.style.display = 'none';
       cropperInstance.destroy();
     }
@@ -727,12 +761,16 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     const year = document.getElementById('tl-year').value.trim();
     if (!year) return showToast("Year is required");
+    if (parseInt(year) < 0) return showToast("Year cannot be negative");
+
+    const title = document.getElementById('tl-title').value.trim();
 
     const newEvent = {
       id: currentTlEditingId || 'tl-' + Date.now(),
       year: year,
+      title: title,
       content: tlDescEditor.root.innerHTML,
-      image: currentTlImage
+      images: currentTlImages
     };
 
     if (currentTlEditingId) {

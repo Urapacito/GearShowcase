@@ -212,8 +212,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function initTimelineWheel(timelineData) {
     const wheel = document.getElementById('timeline-wheel');
     const activeYearEl = document.getElementById('timeline-active-year');
+    const activeTitleEl = document.getElementById('timeline-active-title');
     const activeDescEl = document.getElementById('timeline-active-desc');
-    const activeImgEl = document.getElementById('timeline-active-img');
+    const activeMediaEl = document.getElementById('timeline-media-container');
 
     let activeIndex = Math.floor(timelineData.length / 2);
     const radius = 300;
@@ -305,26 +306,44 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const activeData = timelineData[activeIndex];
       activeYearEl.style.opacity = '0';
+      if (activeTitleEl) activeTitleEl.style.opacity = '0';
       activeDescEl.style.opacity = '0';
-      activeImgEl.style.opacity = '0';
+      if (activeMediaEl) activeMediaEl.style.opacity = '0';
       
       setTimeout(() => {
         // Protrude the line back
         if (line) line.style.height = '250px';
 
         activeYearEl.textContent = activeData.year;
+        if (activeTitleEl) activeTitleEl.textContent = activeData.title ? `- ${activeData.title}` : '';
         activeDescEl.innerHTML = activeData.content;
         
-        if (activeData.image) {
-          activeImgEl.src = activeData.image;
-          activeImgEl.style.display = 'inline-block';
+        const imgs = activeData.images || (activeData.image ? [activeData.image] : []);
+        
+        if (imgs.length > 0) {
+          activeMediaEl.innerHTML = `
+            <div class="carousel-container" id="carousel-tl-${activeIndex}" style="max-width: 100%; border-radius: var(--radius-md); box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden;">
+              <div class="carousel-track">
+                ${imgs.map(img => `<div class="carousel-slide" style="display:flex; justify-content:center; align-items:center;"><img src="${img}" alt="${activeData.year}" loading="lazy" style="max-height: 400px; width: auto;" /></div>`).join('')}
+              </div>
+              ${imgs.length > 1 ? `
+                <button class="carousel-btn carousel-prev"><i class="ph ph-caret-left"></i></button>
+                <button class="carousel-btn carousel-next"><i class="ph ph-caret-right"></i></button>
+              ` : ''}
+            </div>
+          `;
+          activeMediaEl.style.display = 'block';
+          // Initialize just this new carousel
+          initCarousels();
         } else {
-          activeImgEl.style.display = 'none';
+          activeMediaEl.innerHTML = '';
+          activeMediaEl.style.display = 'none';
         }
         
         activeYearEl.style.opacity = '1';
+        if (activeTitleEl) activeTitleEl.style.opacity = '1';
         activeDescEl.style.opacity = '1';
-        if (activeData.image) activeImgEl.style.opacity = '1';
+        if (imgs.length > 0) activeMediaEl.style.opacity = '1';
       }, 300);
     }
 
