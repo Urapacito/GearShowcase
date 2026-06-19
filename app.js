@@ -386,9 +386,9 @@ document.addEventListener("DOMContentLoaded", () => {
         
         if (imgs.length > 0) {
           activeMediaEl.innerHTML = `
-            <div class="carousel-container" id="carousel-tl-${activeIndex}" style="max-width: 100%; border-radius: var(--radius-md); box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden;">
-              <div class="carousel-track">
-                ${imgs.map(img => `<div class="carousel-slide" style="display:flex; justify-content:center; align-items:center;"><img src="${img}" alt="${activeData.year}" loading="lazy" style="max-height: 400px; width: auto;" /></div>`).join('')}
+            <div class="carousel-container" id="carousel-tl-${activeIndex}" style="width: 100%; max-width: 100%; border-radius: var(--radius-md); box-shadow: 0 10px 30px rgba(0,0,0,0.5); overflow: hidden; transform: translateZ(0);">
+              <div class="carousel-track" style="display: flex; width: 100%; height: 100%; border-radius: var(--radius-md);">
+                ${imgs.map(img => `<div class="carousel-slide" style="flex: 0 0 100%; min-width: 0; max-width: 100%; width: 100%; height: auto !important; align-self: stretch; display:flex; justify-content:center; align-items:center; overflow: hidden; border-radius: var(--radius-md);"><img src="${img}" alt="${activeData.year}" loading="lazy" style="max-height: 400px; max-width: 100%; height: auto !important; width: auto !important; object-fit: contain; border-radius: var(--radius-md); margin: auto;" /></div>`).join('')}
               </div>
               ${imgs.length > 1 ? `
                 <button class="carousel-btn carousel-prev"><i class="ph ph-caret-left"></i></button>
