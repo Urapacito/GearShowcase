@@ -125,6 +125,10 @@ header {
   transition: max-width 0.4s ease, margin-left 0.4s ease, opacity 0.4s ease;
 }
 
+.mobile-text {
+  display: none;
+}
+
 .btn-admin:hover .admin-text,
 .btn-admin:active .admin-text {
   max-width: 300px;
@@ -335,12 +339,15 @@ footer {
     grid-template-columns: 1fr;
     direction: ltr;
   }
+  .nav-links { display: none; }
 }
 
 @media (max-width: 768px) {
   .hero h1 { font-size: 3rem; }
   .tech-specs { grid-template-columns: 1fr; }
-  .nav-links { display: none; }
+  
+  .desktop-text { display: none; }
+  .mobile-text { display: inline; }
 }
 
 /* Carousel */
@@ -427,8 +434,8 @@ footer {
   display: none;
 }
 
-/* FAB Menu (Mobile) */
-@media (max-width: 768px) {
+/* FAB Menu (Mobile & Tablet) */
+@media (max-width: 992px) {
   .fab-menu-container {
     display: flex;
     flex-direction: column;
