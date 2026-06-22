@@ -2,6 +2,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // Register GSAP ScrollTrigger
   gsap.registerPlugin(ScrollTrigger);
 
+  // Mobile FAB Menu Toggle
+  const fabToggle = document.getElementById('fab-toggle');
+  const fabMenuContainer = document.querySelector('.fab-menu-container');
+  const fabLinks = document.querySelector('.fab-links');
+
+  if (fabToggle && fabMenuContainer && fabLinks) {
+    fabToggle.addEventListener('click', () => {
+      fabMenuContainer.classList.toggle('active');
+      fabLinks.classList.toggle('active');
+    });
+  }
+
   const productListEl = document.getElementById("product-list");
 
   // Fetch product data

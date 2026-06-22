@@ -112,12 +112,29 @@ header {
   text-decoration: none;
   font-size: 0.85rem;
   font-weight: 600;
+  display: flex;
+  align-items: center;
   transition: all 0.3s ease;
 }
 
+.btn-admin .admin-text {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transition: max-width 0.4s ease, margin-left 0.4s ease, opacity 0.4s ease;
+}
+
+.btn-admin:hover .admin-text,
+.btn-admin:active .admin-text {
+  max-width: 300px;
+  margin-left: 8px;
+  opacity: 1;
+}
+
 .btn-admin:hover {
-  background: var(--text-main);
-  color: var(--bg-color);
+  background: var(--bg-secondary);
+  border-color: var(--text-main);
 }
 
 /* Hero Section */
@@ -403,4 +420,96 @@ footer {
 
 .carousel-next {
   right: 10px;
+}
+
+/* FAB Menu (Desktop Hidden) */
+.fab-menu-container {
+  display: none;
+}
+
+/* FAB Menu (Mobile) */
+@media (max-width: 768px) {
+  .fab-menu-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: fixed;
+    top: 90px;
+    left: 20px;
+    z-index: 1000;
+  }
+  
+  .fab-btn, .fab-link {
+    height: 50px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    background: rgba(20, 20, 20, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-main);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    font-size: 1.5rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+  
+  .fab-btn {
+    width: 50px;
+    justify-content: center;
+    z-index: 2;
+    outline: none;
+  }
+  
+  .fab-main-icon {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .fab-menu-container.active .fab-main-icon {
+    transform: rotate(180deg);
+  }
+
+  .fab-link {
+    min-width: 50px;
+    width: max-content;
+    padding: 0 13px;
+    justify-content: flex-start;
+  }
+  
+  .fab-text {
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    opacity: 0;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: max-width 0.4s ease, margin-left 0.4s ease, opacity 0.4s ease;
+  }
+
+  .fab-link:hover .fab-text,
+  .fab-link:active .fab-text {
+    max-width: 150px;
+    margin-left: 10px;
+    opacity: 1;
+  }
+  
+  .fab-links {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .fab-links.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
 }

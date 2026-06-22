@@ -38,10 +38,33 @@
         <a href="#contact">Contact Me</a>
       </nav>
       <a href="./admin.html" class="btn-admin">
-        <i class="ph ph-database"></i> Is that you master? Master pls go here
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="admin-icon" style="flex-shrink: 0;">
+          <defs>
+            <linearGradient id="login-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00f2fe" />
+              <stop offset="100%" stop-color="#4facfe" />
+            </linearGradient>
+          </defs>
+          <path fill="url(#login-grad)" d="M10,17V14H3V10H10V7L15,12L10,17M20,2H8C6.89,2 6,2.89 6,4V8H8V4H20V20H8V16H6V20C6,21.1 6.9,22 8,22H20C21.1,22 22,21.1 22,20V4C22,2.89 21.1,2 20,2Z" />
+        </svg>
+        <span class="admin-text">Is that you master? Master pls go here</span>
       </a>
     </div>
   </header>
+
+  <!-- Mobile Floating Action Button Menu -->
+  <div class="fab-menu-container">
+    <button id="fab-toggle" class="fab-btn">
+      <i class="ph ph-caret-down fab-main-icon"></i>
+    </button>
+    <div class="fab-links">
+      <a href="#aboutme" class="fab-link"><i class="ph ph-user"></i><span class="fab-text">About Me</span></a>
+      <a href="#timeline" class="fab-link"><i class="ph ph-path"></i><span class="fab-text">My Journey</span></a>
+      <a href="#showcase" class="fab-link"><i class="ph ph-headphones"></i><span class="fab-text">Showcase</span></a>
+      <a href="#philosophy" class="fab-link"><i class="ph ph-brain"></i><span class="fab-text">Philosophy</span></a>
+      <a href="#contact" class="fab-link"><i class="ph ph-envelope-simple"></i><span class="fab-text">Contact Me</span></a>
+    </div>
+  </div>
 
   <main>
     <section class="hero">
